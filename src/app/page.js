@@ -1,65 +1,131 @@
-import Image from "next/image";
+"use client";
+import ColorPicker from '@/components/ColorPicker';
+import Controls from '@/components/Controls';
+import Cube3D from '@/components/Cube3D';
+import FlatCube from '@/components/FlatCube';
+import { useCube } from '@/hooks/useCube';
+import { cubeToSolverState } from '@/lib/cubeAdapter';
+import { normalizeMoves } from '@/lib/normalizeMoves';
+import { solver } from '@/lib/solver';
+import { validateCube } from '@/lib/validator';
+import { useState } from 'react';
+
+
+
 
 export default function Home() {
+  const {
+  cube,
+  mode,
+  setMode,
+  move,
+  reset,
+  setSticker,
+  selectedColor,
+  setSelectedColor,
+  playSolution,
+  isPlaying,
+} = useCube();
+
+
+  const validation = validateCube(cube);
+  const [solveError, setSolveError] = useState('');
+
+  
+  function handleSolve() {
+  setSolveError('');
+
+  const validation = validateCube(cube);
+  if (!validation.valid) {
+    setSolveError('Cube is invalid. Please fix scan errors.');
+    return;
+  }
+
+  const state = cubeToSolverState(cube);
+  const result = solver.solve(state);
+
+  if (result === false) {
+    setSolveError('This cube configuration cannot be solved. Please check again');
+    return;
+  }
+
+  if (!result) {
+    setSolveError('Cube is already solved.');
+    return;
+  }
+
+  const rawMoves = result.split(' ');
+const moves = normalizeMoves(rawMoves);
+
+// console.log(moves);
+playSolution(moves);
+
+}
+
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-6">
+      <h1 className="text-3xl font-bold">
+        Rubik’s Cube Solver
+      </h1>
+
+      <div className="flex gap-6 flex-wrap justify-center">
+        <div className="bg-white shadow rounded p-4">
+  <Cube3D cube={cube} />
+</div>
+        <div className="bg-white shadow rounded p-4">
+          <FlatCube
+            cube={cube}
+            scanMode={mode === 'scan'}
+            onStickerClick={setSticker}
+          />
+
+{mode === 'scan' && (
+  <div className="mt-4 space-y-3">
+    <p className="text-sm font-medium text-center">
+      Select color
+    </p>
+    <ColorPicker
+      selected={selectedColor}
+      onSelect={setSelectedColor}
+    />
+    {solveError && (
+  <p className="mt-3 text-sm text-red-600 text-center font-medium">
+    {solveError}
+  </p>
+)}
+  </div>
+)}
+          {/* Validation status */}
+          {mode === 'scan' && (
+            <div className="mt-3 text-sm">
+              {validation.valid ? (
+                <p className="text-green-600 font-medium">
+                  ✓ Cube is valid
+                </p>
+              ) : (
+                <ul className="text-red-600 space-y-1">
+                  {validation.errors.map((e, i) => (
+                    <li key={i}>• {e}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="w-[320px] bg-white shadow rounded p-4">
+          <Controls
+            mode={mode}
+            setMode={setMode}
+            onMove={move}
+            onReset={reset}
+             onSolve={handleSolve}
+  canSolve={validation.valid}
+            onScanCamera={() => alert('Camera scanning coming next')}
+          />
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
