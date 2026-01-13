@@ -8,7 +8,7 @@ import { cubeToSolverState } from '@/lib/cubeAdapter';
 import { normalizeMoves } from '@/lib/normalizeMoves';
 import { solver } from '@/lib/solver';
 import { validateCube } from '@/lib/validator';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 
 
@@ -26,6 +26,9 @@ export default function Home() {
   playSolution,
   isPlaying,
 } = useCube();
+
+const cube3DRef = useRef(null);
+
 
 
   const validation = validateCube(cube);
@@ -58,7 +61,8 @@ export default function Home() {
 const moves = normalizeMoves(rawMoves);
 
 // console.log(moves);
-playSolution(moves);
+playSolution(moves, cube3DRef.current.animateMove);
+
 
 }
 
@@ -71,7 +75,8 @@ playSolution(moves);
 
       <div className="flex gap-6 flex-wrap justify-center">
         <div className="bg-white shadow rounded p-4">
-  <Cube3D cube={cube} />
+  <Cube3D ref={cube3DRef} cube={cube} />
+
 </div>
         <div className="bg-white shadow rounded p-4">
           <FlatCube
@@ -118,9 +123,10 @@ playSolution(moves);
           <Controls
             mode={mode}
             setMode={setMode}
-            onMove={move}
+            onMove={(m) => move(m, cube3DRef.current.animateMove)}
             onReset={reset}
              onSolve={handleSolve}
+             isPlaying={isPlaying}
   canSolve={validation.valid}
             onScanCamera={() => alert('Camera scanning coming next')}
           />

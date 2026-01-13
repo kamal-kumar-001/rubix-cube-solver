@@ -1,4 +1,4 @@
-// src/lib/cubeLogic.js
+
 
 export const SOLVED_CUBE = {
   U: Array(9).fill('W'),

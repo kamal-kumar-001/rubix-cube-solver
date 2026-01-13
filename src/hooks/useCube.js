@@ -6,13 +6,28 @@ export function useCube() {
   const [mode, setMode] = useState('play');
   const [selectedColor, setSelectedColor] = useState('W');
 
+
   const [isPlaying, setIsPlaying] = useState(false);
   const playbackRef = useRef(null);
 
-  function move(notation) {
-    if (mode !== 'play' || isPlaying) return;
-    setCube(prev => applyMove(prev, notation));
-  }
+  function playMove(move, animate3D, setCube) {
+  return new Promise(resolve => {
+    animate3D(move, () => {
+      setCube(prev => applyMove(prev, move));
+      resolve();
+    });
+  });
+}
+
+
+  async function move(notation, animate3D) {
+  if (mode !== 'play' || isPlaying) return;
+
+  setIsPlaying(true);
+  await playMove(notation, animate3D, setCube);
+  setIsPlaying(false);
+}
+
 
   function reset() {
     stopPlayback();
@@ -29,26 +44,19 @@ export function useCube() {
     });
   }
 
-function playSolution(moves) {
+async function playSolution(moves, animate3D) {
+  if (!moves.length) return;
 
   setIsPlaying(true);
 
-  let i = 0;
+  for (const move of moves) {
+    await playMove(move, animate3D, setCube);
+  }
 
-  const step = () => {
-    const move = moves[i]; 
-    setCube(prev => applyMove(prev, move));
-    i++;
-
-    if (i < moves.length) {
-      playbackRef.current = setTimeout(step, 500);
-    } else {
-      setIsPlaying(false);
-    }
-  };
-
-  step();
+  setIsPlaying(false);
 }
+
+
 
 
 
