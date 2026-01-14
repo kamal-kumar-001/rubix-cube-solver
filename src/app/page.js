@@ -2,6 +2,7 @@
 import ColorPicker from '@/components/ColorPicker';
 import Controls from '@/components/Controls';
 import Cube3D from '@/components/Cube3D';
+
 import FlatCube from '@/components/FlatCube';
 import { useCube } from '@/hooks/useCube';
 import { cubeToSolverState } from '@/lib/cubeAdapter';
@@ -10,6 +11,12 @@ import { solver } from '@/lib/solver';
 import { validateCube } from '@/lib/validator';
 import { useRef, useState } from 'react';
 
+import dynamic from 'next/dynamic';
+
+const CameraScanner = dynamic(
+  () => import('@/components/CubeScanner'),
+  { ssr: false }
+);
 
 
 
@@ -25,6 +32,7 @@ export default function Home() {
   setSelectedColor,
   playSolution,
   isPlaying,
+  fillFaceFromScan,
 } = useCube();
 
 const cube3DRef = useRef(null);
@@ -33,6 +41,7 @@ const cube3DRef = useRef(null);
 
   const validation = validateCube(cube);
   const [solveError, setSolveError] = useState('');
+  const [scanMode, setScanMode] = useState(false);
 
   
   function handleSolve() {
@@ -65,7 +74,11 @@ playSolution(moves, cube3DRef.current.animateMove);
 
 
 }
-
+ function onScan(){
+  // applyScannedFace
+  console.log(" hi");
+  
+ }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-6">
@@ -74,11 +87,11 @@ playSolution(moves, cube3DRef.current.animateMove);
       </h1>
 
       <div className="flex gap-6 flex-wrap justify-center">
-        <div className="bg-white shadow rounded p-4">
+        <div className="bg-gray-400 shadow rounded p-4">
   <Cube3D ref={cube3DRef} cube={cube} />
 
 </div>
-        <div className="bg-white shadow rounded p-4">
+        <div className="bg-gray-400 shadow rounded p-4">
           <FlatCube
             cube={cube}
             scanMode={mode === 'scan'}
@@ -128,8 +141,19 @@ playSolution(moves, cube3DRef.current.animateMove);
              onSolve={handleSolve}
              isPlaying={isPlaying}
   canSolve={validation.valid}
-            onScanCamera={() => alert('Camera scanning coming next')}
+            onScan={onScan}
           />
+          {scanMode && (
+  <CameraScanner
+    onFaceDetected={(face, colors) => {
+      fillFaceFromScan(face, colors);
+    }}
+  />
+)}
+<button onClick={() => setScanMode(s => !s)}>
+  {scanMode ? 'Stop Scan' : 'Scan Cube'}
+</button>
+
         </div>
       </div>
     </main>

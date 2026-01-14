@@ -32,7 +32,7 @@ const Cube3D = forwardRef(({ cube }, ref) => {
     const height = 360;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf8f8f8);
+    scene.background = new THREE.Color(0x9CA3AF);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);

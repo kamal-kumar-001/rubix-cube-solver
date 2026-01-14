@@ -1,3 +1,5 @@
+import CubeScanner from "./CubeScanner";
+
 export default function Controls({
   onMove,
   onReset,
@@ -7,6 +9,7 @@ export default function Controls({
   canSolve,
   onSolve,
   isPlaying,
+  onScan,
 }) {
   const moves = ['U', "U'", 'D', "D'", 'L', "L'", 'R', "R'", 'F', "F'", 'B', "B'"];
 
@@ -51,12 +54,13 @@ export default function Controls({
 
       {/* Scan tools */}
       {mode === 'scan' && (
-        <button
-          onClick={onScanCamera}
-          className="w-full rounded bg-blue-600 text-white py-2"
-        >
-          Scan with Camera (coming soon)
-        </button>
+        <CubeScanner onScan={onScan}/>
+        // <button
+        //   onClick={onScanCamera}
+        //   className="w-full rounded bg-blue-600 text-white py-2"
+        // >
+        //   Scan with Camera (coming soon)
+        // </button>
       )}
 
       <button
