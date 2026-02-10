@@ -4,6 +4,7 @@ import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { MOVE_META } from '@/lib/moveMeta';
+import { getStickerIndex } from '@/lib/stickerMap';
 
 const COLOR_MAP = {
   W: 0xffffff,
@@ -90,7 +91,7 @@ const Cube3D = forwardRef(({ cube }, ref) => {
 
   useEffect(() => {
     if (!cubeGroupRef.current) return;
-    updateCubies(cubeGroupRef.current, cube);
+    updateCubies(cubeGroupRef.current, cubiesRef.current, cube);
   }, [cube]);
 
   /* ---------------- animation API ---------------- */
@@ -198,14 +199,14 @@ function createCubies(group, cube, cubiesRef) {
   }
 }
 
-function updateCubies(group, cube) {
-  let i = 0;
-  for (let x = -1; x <= 1; x++) {
-    for (let y = -1; y <= 1; y++) {
-      for (let z = -1; z <= 1; z++) {
-        group.children[i++].material = createMaterials(x, y, z, cube);
-      }
-    }
+function updateCubies(group, cubies, cube) {
+  const list = cubies?.length ? cubies : group.children;
+
+  for (const mesh of list) {
+    const x = Math.round(mesh.position.x);
+    const y = Math.round(mesh.position.y);
+    const z = Math.round(mesh.position.z);
+    mesh.material = createMaterials(x, y, z, cube);
   }
 }
 
@@ -223,8 +224,8 @@ function createMaterials(x, y, z, cube) {
   };
 
   return [
-    faces.px ? coloredMaterial(faces.px, y, z, 'R') : black, // right
-    faces.nx ? coloredMaterial(faces.nx, y, z, 'L') : black, // left
+    faces.px ? coloredMaterial(faces.px, -z, y, 'R') : black, // right
+    faces.nx ? coloredMaterial(faces.nx, z, y, 'L') : black, // left
     faces.py ? coloredMaterial(faces.py, x, z, 'U') : black, // top
     faces.ny ? coloredMaterial(faces.ny, x, z, 'D') : black, // bottom
     faces.pz ? coloredMaterial(faces.pz, x, y, 'F') : black, // front
@@ -244,41 +245,4 @@ function coloredMaterial(face, a, b, faceKey) {
 
 /* ---- map 3D coords to face index ---- */
 
-function getStickerIndex(face, a, b) {
-  const map = {
-    U: [
-      [6, 7, 8],
-      [3, 4, 5],
-      [0, 1, 2],
-    ],
-    D: [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-    ],
-    F: [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-    ],
-    B: [
-      [2, 1, 0],
-      [5, 4, 3],
-      [8, 7, 6],
-    ],
-    L: [
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-    ],
-    R: [
-      [8, 5, 2],
-      [7, 4, 1],
-      [6, 3, 0],
-    ],
-  };
-
-  return map[face][1 - b][a + 1];
-}
-
-
+// getStickerIndex moved to lib/stickerMap.js

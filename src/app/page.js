@@ -11,15 +11,6 @@ import { solver } from '@/lib/solver';
 import { validateCube } from '@/lib/validator';
 import { useRef, useState } from 'react';
 
-import dynamic from 'next/dynamic';
-
-const CameraScanner = dynamic(
-  () => import('@/components/CubeScanner'),
-  { ssr: false }
-);
-
-
-
 export default function Home() {
   const {
   cube,
@@ -30,9 +21,16 @@ export default function Home() {
   setSticker,
   selectedColor,
   setSelectedColor,
-  playSolution,
   isPlaying,
   fillFaceFromScan,
+  solutionMoves,
+  solutionIndex,
+  setSolution,
+  nextSolutionStep,
+  prevSolutionStep,
+  startAutoPlay,
+  stopAutoPlay,
+  isAutoPlaying,
 } = useCube();
 
 const cube3DRef = useRef(null);
@@ -41,7 +39,6 @@ const cube3DRef = useRef(null);
 
   const validation = validateCube(cube);
   const [solveError, setSolveError] = useState('');
-  const [scanMode, setScanMode] = useState(false);
 
   
   function handleSolve() {
@@ -70,15 +67,10 @@ const cube3DRef = useRef(null);
 const moves = normalizeMoves(rawMoves);
 
 // console.log(moves);
-playSolution(moves, cube3DRef.current.animateMove);
+setSolution(moves);
 
 
 }
- function onScan(){
-  // applyScannedFace
-  console.log(" hi");
-  
- }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-6">
@@ -141,18 +133,20 @@ playSolution(moves, cube3DRef.current.animateMove);
              onSolve={handleSolve}
              isPlaying={isPlaying}
   canSolve={validation.valid}
-            onScan={onScan}
+            onFaceDetected={(face, colors) => {
+              fillFaceFromScan(face, colors);
+            }}
+            solutionMoves={solutionMoves}
+            solutionIndex={solutionIndex}
+            onNextStep={() => nextSolutionStep(cube3DRef.current.animateMove)}
+            onPrevStep={() => prevSolutionStep(cube3DRef.current.animateMove)}
+            onToggleAuto={() =>
+              isAutoPlaying
+                ? stopAutoPlay()
+                : startAutoPlay(cube3DRef.current.animateMove, 5000)
+            }
+            isAutoPlaying={isAutoPlaying}
           />
-          {scanMode && (
-  <CameraScanner
-    onFaceDetected={(face, colors) => {
-      fillFaceFromScan(face, colors);
-    }}
-  />
-)}
-<button onClick={() => setScanMode(s => !s)}>
-  {scanMode ? 'Stop Scan' : 'Scan Cube'}
-</button>
 
         </div>
       </div>
